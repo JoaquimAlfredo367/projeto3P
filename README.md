@@ -1,65 +1,61 @@
-# Dashboard de Comunicação Interna
+#  FoodCity
 
-Projeto desenvolvido para a disciplina de Projeto de programção.
-
-O objetivo do projeto é criar um protótipo de um sistema de comunicação interna para empresas, permitindo visualizar usuários, postagens e comentários.
-
-Para acelerar o desenvolvimento, utilizamos uma API pública de testes.
+Sistema web desenvolvido para facilitar a comunicação entre restaurantes e clientes dentro de uma cidade, permitindo visualização de estabelecimentos, cardápios e interações.
 
 ---
 
-## API utilizada
+##  Sobre o Projeto
 
-JSONPlaceholder
+O **FoodCity** é uma plataforma que conecta usuários a restaurantes locais, permitindo:
 
-https://jsonplaceholder.typicode.com
+- Visualizar restaurantes disponíveis
+- Acessar cardápios
+- Interagir com conteúdos (como avaliações ou comentários)
+- Simular um ambiente de descoberta gastronômica
 
-Essa API fornece dados fictícios para testes, como usuários, postagens e comentários.
-
----
-
-## Funcionalidades do Protótipo
-
-O sistema permite:
-
-- Listar usuários
-- Visualizar postagens de um usuário
-- Visualizar comentários de uma postagem
-
-Essas informações são obtidas através de requisições HTTP para a API.
+O projeto foi desenvolvido como parte da disciplina de **Projeto de Programação**.
 
 ---
 
-## Tecnologias utilizadas
+##  Objetivo
 
-- Python
-- API REST
-- JSON
-- GitHub
+Criar um sistema funcional que simule uma aplicação real de busca e interação com restaurantes, aplicando conceitos de:
 
----
-
-## Estrutura do projeto
-
-codigo/ → código do protótipo  
-slides/ → apresentação do pitch  
-PRD/ → documento de requisitos do projeto  
+- Desenvolvimento Front-end
+- Consumo de API
+- Organização de projeto em equipe
+- Versionamento com Git e GitHub
 
 ---
 
-## Integrantes do grupo
+##  Funcionalidades
 
-- Joaquim Alfredo
-- Luna Gabrielly
-- Sidney Barros 
-- Kauã Victor
+-  Listagem de restaurantes
+-  Visualização de cardápios
+-  Exibição de usuários
+-  Interações (comentários/avaliações)
+-  Navegação entre páginas
+
+---
+
+##  Tecnologias Utilizadas
+
+- HTML
+- CSS
+- JavaScript
+- API pública (para simulação de dados)
+
+---
+
+##  Equipe
+
+Projeto desenvolvido em grupo:
+
+- Joaquim Alfredo 
+- Kauâ Vitor
 - Lucas Portela
+- Luna Gabrielly 
+- Maria 
+- Sidney Barros
 
 ---
-
-## Objetivo do projeto
-
-Demonstrar como sistemas podem consumir APIs REST externas para construir aplicações de forma rápida, sem a necessidade de desenvolver um banco de dados próprio.
-
----
-

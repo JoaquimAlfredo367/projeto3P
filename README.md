@@ -55,7 +55,7 @@ Projeto desenvolvido em grupo:
 - Kauâ Vitor
 - Lucas Portela
 - Luna Gabrielly 
-- Maria 
+- Maria Itauana 
 - Sidney Barros
 
 ---

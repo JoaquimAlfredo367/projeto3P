@@ -52,7 +52,7 @@ Criar um sistema funcional que simule uma aplicação real de busca e interaçã
 Projeto desenvolvido em grupo:
 
 - Joaquim Alfredo 
-- Kauâ Vitor
+- Kauã Vitor
 - Lucas Portela
 - Luna Gabrielly 
 - Maria Itauana 

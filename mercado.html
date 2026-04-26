@@ -780,31 +780,88 @@ function onAddrUpdate(d) {
   }
 }
  
-function onNewOrder(d) {
-  if (!d || !d.id) return;
-  if (orders.find(o => o.id === d.id)) {
-    debugLog('Order duplicada ignorada: ' + d.id);
+function handleNewOrder(data) {
+  if (!isValidOrder(data)) return;
+
+  if (orderExists(data.id)) {
+    debugLog('Order duplicada ignorada: ' + data.id);
     return;
   }
-  const isNC = clients[d.client?.id]?.isNew;
-  const newOrder = { ...d, time: new Date(d.time || Date.now()), status: 'new', isNewClient: !!isNC };
-  orders.unshift(newOrder);
-  dbSaveOrder(newOrder);
-  if (d.client?.id && clients[d.client.id]) {
-    clients[d.client.id].orderCount++;
-    clients[d.client.id].isNew = false;
-    dbSaveClient(clients[d.client.id]);
-  }
-  showNotif('📦', 'Pedido ' + d.id + (isNC ? ' — 1o pedido!' : ''),
-    (d.client?.name || '') + ' · R$ ' + (d.total || 0).toFixed(2) + ' · ' +
-    (d.type === 'market' ? 'Mercado' : d.type === 'delivery' ? 'Delivery' : 'Retirada'), 'no');
-  showToast('Pedido ' + d.id + ' recebido!', 'order');
-  setText('ordSub',   'Ultimo: ' + d.id + ' de ' + d.client?.name + ' — ' + hhmm());
-  setText('bridgeTxt','Ultimo: ' + d.id + ' de ' + d.client?.name + ' — ' + hhmm());
-  debugLog('NEW_ORDER: ' + d.id + ' R$ ' + (d.total || 0).toFixed(2));
+
+  const order = createOrder(data);
+
+  addOrder(order);
+  updateClientAfterOrder(order);
+
+  notifyNewOrder(order);
+  updateOrderUI(order);
+
+  debugLog(`NEW_ORDER: ${order.id} R$ ${order.total.toFixed(2)}`);
+}
+
+function isValidOrder(d) {
+  return d && d.id;
+}
+
+function orderExists(id) {
+  return orders.some(o => o.id === id);
+}
+
+function createOrder(d) {
+  const isNewClient = clients[d.client?.id]?.isNew;
+
+  return {
+    ...d,
+    time: new Date(d.time || Date.now()),
+    status: 'new',
+    isNewClient: !!isNewClient
+  };
+}
+
+function addOrder(order) {
+  orders.unshift(order);
+  dbSaveOrder(order);
+}
+
+function updateClientAfterOrder(order) {
+  const clientId = order.client?.id;
+
+  if (!clientId || !clients[clientId]) return;
+
+  const client = clients[clientId];
+
+  client.orderCount++;
+  client.isNew = false;
+
+  dbSaveClient(client);
+}
+
+function notifyNewOrder(order) {
+  const typeLabel =
+    order.type === 'market' ? 'Mercado' :
+    order.type === 'delivery' ? 'Delivery' : 'Retirada';
+
+  showNotif(
+    '📦',
+    `Pedido ${order.id}${order.isNewClient ? ' — 1º pedido!' : ''}`,
+    `${order.client?.name || ''} · R$ ${order.total.toFixed(2)} · ${typeLabel}`,
+    'no'
+  );
+
+  showToast(`Pedido ${order.id} recebido!`, 'order');
+
   if (soundOn) playBeep();
 }
- 
+
+function updateOrderUI(order) {
+  const text = `Ultimo: ${order.id} de ${order.client?.name} — ${hhmm()}`;
+
+  setText('ordSub', text);
+  setText('bridgeTxt', text);
+
+  renderAll();
+}
+
 function onOrderStatus(d) {
   debugLog('ORDER_STATUS: ' + d?.orderId + ' = ' + d?.status);
 }

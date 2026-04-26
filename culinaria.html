@@ -818,7 +818,22 @@ document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')b
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenu();closeReg();closeTrack();document.getElementById('cartOv').classList.remove('show');}});
 renderPromos();renderCatPills();renderProducts();buscar();
 
+  // validação de CEP!
+function validarCEP() {
+  const cep = document.getElementById("cepInput").value;
+  const resultado = document.getElementById("cepResult");
 
+  if (cep === "") {
+    resultado.innerHTML = "Digite um CEP!";
+    return;
+  }
+
+  if (cep.length !== 8) {
+    resultado.innerHTML = "CEP inválido! Use 8 números.";
+    return;
+  }
+
+  resultado.innerHTML = "CEP válido!";
 }  
   // Restaura dados do IndexedDB (carrinho, usuário, modo)
 dbRestoreClient();

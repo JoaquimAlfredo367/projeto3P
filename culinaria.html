@@ -779,36 +779,98 @@ function renderRegForm(mode){
     <div class="reg-tog">${isL?'Sem conta? <a onclick="renderRegForm(\'signup\')">Cadastre-se</a>':'Já tem conta? <a onclick="renderRegForm(\'login\')">Entrar</a>'}</div>`;
 }
  
+
+/* ── VALIDAÇÃO DE FORMULÁRIO ── */
+function markField(id, valid) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.borderColor = valid ? '' : '#f87171';
+  el.style.boxShadow  = valid ? '' : '0 0 0 2px rgba(248,113,113,.25)';
+}
+function clearFieldMarks(ids) {
+  ids.forEach(id => markField(id, true));
+}
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validarTelefone(tel) {
+  const digits = tel.replace(/\D/g, '');
+  return digits.length >= 10 && digits.length <= 11;
+}
+
 function submitReg(mode){
-  const email=document.getElementById('rE')?.value?.trim();
-  if(!email){toast('Preencha o e-mail!');return;}
-  const clientId='cli_'+Date.now();
-  if(mode==='signup'){
-    const nome=(document.getElementById('rN')?.value?.trim()||'Usuário');
-    const sobe=(document.getElementById('rS')?.value?.trim()||'');
-    const tel=(document.getElementById('rTel')?.value?.trim()||'');
-    const end=(document.getElementById('rEnd')?.value?.trim()||'');
-    const cep=(document.getElementById('rCep')?.value?.trim()||'');
-    currentUser={id:clientId,name:nome+(sobe?' '+sobe:''),email,phone:tel,address:end,cep,registeredAt:new Date().toISOString()};
+  const email = document.getElementById('rE')?.value?.trim();
+  const senha = document.getElementById('rP')?.value;
+  let valido = true;
+
+  clearFieldMarks(['rE','rP','rN','rS','rTel']);
+
+  if (!email) {
+    markField('rE', false);
+    toast('Preencha o e-mail!');
+    valido = false;
+  } else if (!validarEmail(email)) {
+    markField('rE', false);
+    toast('E-mail inválido! Use o formato: email@exemplo.com');
+    valido = false;
+  }
+
+  if (!senha || senha.length < 6) {
+    markField('rP', false);
+    toast('A senha deve ter no mínimo 6 caracteres!');
+    valido = false;
+  }
+
+  if (mode === 'signup') {
+    const nome = document.getElementById('rN')?.value?.trim();
+    const sobe = document.getElementById('rS')?.value?.trim() || '';
+    const tel  = document.getElementById('rTel')?.value?.trim() || '';
+
+    if (!nome) {
+      markField('rN', false);
+      toast('Preencha seu nome!');
+      valido = false;
+    } else if (nome.length < 2) {
+      markField('rN', false);
+      toast('Nome muito curto!');
+      valido = false;
+    }
+
+    if (tel && !validarTelefone(tel)) {
+      markField('rTel', false);
+      toast('Telefone inválido! Use DDD + número (10 ou 11 dígitos).');
+      valido = false;
+    }
+
+    if (!valido) return;
+
+    const end = document.getElementById('rEnd')?.value?.trim() || '';
+    const cep = document.getElementById('rCep')?.value?.trim() || '';
+    const clientId = 'cli_' + Date.now();
+    currentUser = {id:clientId, name:nome+(sobe?' '+sobe:''), email, phone:tel, address:end, cep, registeredAt:new Date().toISOString()};
     dbSaveSession('currentUser', currentUser);
- 
-    /* ── ENVIA CLIENTE PARA O PAINEL ── */
+
     bridgeSend('NEW_CLIENT',{
       id:clientId,
       name:currentUser.name,
-      email,phone:tel,address:end,cep,
+      email, phone:tel, address:end, cep,
       registeredAt:currentUser.registeredAt,
     });
- 
+
     toast(`Bem-vindo, ${currentUser.name}!`);
     setTimeout(()=>toast('Dados enviados ao painel da loja!'),600);
-  }else{
-    currentUser={id:clientId,name:'Usuário',email,registeredAt:new Date().toISOString()};
+
+  } else {
+    if (!valido) return;
+
+    const clientId = 'cli_' + Date.now();
+    currentUser = {id:clientId, name:'Usuário', email, registeredAt:new Date().toISOString()};
     dbSaveSession('currentUser', currentUser);
-    bridgeSend('CLIENT_LOGIN',{id:clientId,name:'Usuário',email,loginAt:new Date().toISOString()});
+    bridgeSend('CLIENT_LOGIN',{id:clientId, name:'Usuário', email, loginAt:new Date().toISOString()});
     toast('Login realizado!');
   }
-  document.getElementById('loginBtn').textContent='◈ '+currentUser.name;
+
+  document.getElementById('loginBtn').textContent = '◈ ' + currentUser.name;
   closeReg();
 }
  

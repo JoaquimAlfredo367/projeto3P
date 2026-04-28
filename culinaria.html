@@ -367,8 +367,8 @@ footer a:hover{color:var(--yellow2);}
   <div class="promo-wrap"><div class="sec-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Promoções da Semana</div><div class="promo-scroll" id="promoScroll"></div></div>
   <div class="search-area">
     <div class="search-row">
-      <input id="q" type="text" placeholder="Culinária, nome ou bairro…"/>
-      <button class="btn-search" onclick="validarCEP()">Buscar</button>
+      <input id="q" type="text" placeholder="Culinária, nome ou bairro…" onkeyup="filtrarRestaurantes()"/>
+      <button class="btn-search" onclick="filtrarRestaurantes()">Buscar</button>
     </div>
   </div>
   <div class="filters">
@@ -836,6 +836,42 @@ function validarCEP() {
   resultado.innerHTML = "CEP válido!";
 }  
   // Restaura dados do IndexedDB (carrinho, usuário, modo)
+
+function filtrarRestaurantes() {
+  const termo = document.getElementById("q").value.toLowerCase();
+  const cards = document.querySelectorAll(".card");
+
+  let encontrou = false;
+
+  cards.forEach(card => {
+    const texto = card.innerText.toLowerCase();
+
+    if (texto.includes(termo)) {
+      card.style.display = "block";
+      encontrou = true;
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  let msg = document.getElementById("msgVazio");
+
+  if (!encontrou) {
+    if (!msg) {
+      msg = document.createElement("p");
+      msg.id = "msgVazio";
+      msg.innerText = "Nenhum restaurante encontrado 😕";
+      msg.style.textAlign = "center";
+      msg.style.marginTop = "20px";
+      msg.style.color = "#f5ede0";
+      document.getElementById("results").appendChild(msg);
+    }
+  } else {
+    if (msg) msg.remove();
+  }
+}
+
+// Restaura dados do IndexedDB (carrinho, usuário, modo)
 dbRestoreClient();
 </script>
 </body>

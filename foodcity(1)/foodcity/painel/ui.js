@@ -21,7 +21,7 @@ function updateSidebar() {
   setText('sbCliNew',  newCliCnt);
   setText('sbPending', orders.filter(o => o.status === 'new' || o.status === 'prep').length);
 }
- 
+
 /* ══════════════════════════════════════════════
    NAVEGACAO
 ══════════════════════════════════════════════ */
@@ -36,6 +36,7 @@ function showPage(id, el, color) {
   if (id === 'historico')  renderHistory();
   if (id === 'relatorios') renderReports();
   if (id === 'estoque')    renderStock();
+  if (id === 'dias')       renderDayHistory();   // ← NOVO
   updateBadges(); updateSidebar();
 }
 function filterOrders(type, el) {
@@ -53,7 +54,7 @@ function toggleStore() {
   if (sd) sd.style.animation = storeOpen ? 'pulse 1.2s infinite' : 'none';
   showToast(storeOpen ? 'Loja aberta' : 'Loja fechada');
 }
- 
+
 /* ══════════════════════════════════════════════
    SIMULACAO
 ══════════════════════════════════════════════ */
@@ -65,7 +66,6 @@ function simulateOrder() {
   const items = DITEMS.slice(0, n).map(([nm, p]) => ({name: nm, qty: 1, price: p}));
   const total = items.reduce((s, i) => s + i.price, 0) + 5;
   const cid = 'sim_' + Date.now();
-  // registra o cliente simulado
   onNewClient({id: cid, name, email: name.toLowerCase().replace(' ', '.') + '@email.com',
     phone: '(82) 99' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000),
     address: 'Rua Demo, ' + Math.floor(Math.random()*999+1), registeredAt: new Date().toISOString()});
@@ -80,7 +80,7 @@ function simulateOrder() {
   });
   renderAll();
 }
- 
+
 /* ══════════════════════════════════════════════
    UI
 ══════════════════════════════════════════════ */
@@ -122,104 +122,10 @@ function playChime() {
     });
   } catch(e) {}
 }
-/* ══════════════════════════════════════════════
-   PAINEL DE ALERTAS GRANULAR
-══════════════════════════════════════════════ */
-
-// Metadados dos toggles de alerta
-const ALERT_DEFS = [
-  { key: 'sndOrder',  icon: '🔔', label: 'Som — Novo pedido',       group: 'som',    critical: true  },
-  { key: 'sndClient', icon: '🎵', label: 'Som — Novo cliente',       group: 'som',    critical: false },
-  { key: 'sndReady',  icon: '🔔', label: 'Som — Pedido pronto',      group: 'som',    critical: false },
-  { key: 'visOrder',  icon: '📦', label: 'Visual — Novos pedidos',   group: 'visual', critical: true  },
-  { key: 'visClient', icon: '👤', label: 'Visual — Novos clientes',  group: 'visual', critical: false },
-];
-
-function toggleAlertPanel() {
-  let panel = document.getElementById('alertPanel');
-  if (panel) { panel.remove(); return; }
-
-  panel = document.createElement('div');
-  panel.id = 'alertPanel';
-  panel.className = 'alert-panel';
-  panel.innerHTML = renderAlertPanelHTML();
-
-  // Posiciona abaixo do botão
-  const btn = document.getElementById('alertsBtn');
-  document.body.appendChild(panel);
-  const br = btn.getBoundingClientRect();
-  panel.style.top  = (br.bottom + 6) + 'px';
-  panel.style.right = (window.innerWidth - br.right) + 'px';
-
-  // Fecha ao clicar fora
-  setTimeout(() => {
-    document.addEventListener('click', function outsideClose(ev) {
-      if (!panel.contains(ev.target) && ev.target.id !== 'alertsBtn') {
-        panel.remove();
-        document.removeEventListener('click', outsideClose);
-      }
-    });
-  }, 50);
-}
-
-function renderAlertPanelHTML() {
-  const groups = [
-    { id: 'som',    title: '🔊 Sons',             keys: ALERT_DEFS.filter(d => d.group === 'som') },
-    { id: 'visual', title: '👁 Notificações visuais', keys: ALERT_DEFS.filter(d => d.group === 'visual') },
-  ];
-  return `
-    <div class="ap-header">
-      <span class="ap-title">Configurar Alertas</span>
-      <button class="ap-close" onclick="toggleAlertPanel()">✕</button>
-    </div>
-    ${groups.map(g => `
-      <div class="ap-group">
-        <div class="ap-group-label">${g.title}</div>
-        ${g.keys.map(d => `
-          <label class="ap-row${d.critical ? ' ap-critical' : ''}" onclick="toggleAlertPref('${d.key}')">
-            <span class="ap-icon">${d.icon}</span>
-            <span class="ap-label">${d.label}</span>
-            ${d.critical ? '<span class="ap-badge-crit">crítico</span>' : ''}
-            <div class="ap-switch${alertPrefs[d.key] ? ' on' : ''}">
-              <div class="ap-switch-knob"></div>
-            </div>
-          </label>
-        `).join('')}
-      </div>
-    `).join('')}
-    <div class="ap-footer">
-      <button class="ap-all-on"  onclick="setAllAlerts(true)">Ativar tudo</button>
-      <button class="ap-all-off" onclick="setAllAlerts(false)">Silenciar tudo</button>
-    </div>
-  `;
-}
-
-function toggleAlertPref(key) {
-  if (!(key in alertPrefs)) return;
-  alertPrefs[key] = !alertPrefs[key];
-  dbSaveSetting('alertPrefs', alertPrefs);
-  // Atualiza só o painel sem fechar
-  const panel = document.getElementById('alertPanel');
-  if (panel) panel.innerHTML = renderAlertPanelHTML();
-  updateAlertsBtnState();
-}
-
-function setAllAlerts(on) {
-  Object.keys(alertPrefs).forEach(k => alertPrefs[k] = on);
-  dbSaveSetting('alertPrefs', alertPrefs);
-  const panel = document.getElementById('alertPanel');
-  if (panel) panel.innerHTML = renderAlertPanelHTML();
-  updateAlertsBtnState();
-  showToast(on ? 'Todos os alertas ativados' : 'Todos os alertas silenciados');
-}
-
-function updateAlertsBtnState() {
-  const btn = document.getElementById('alertsBtn');
-  if (!btn) return;
-  // Pisca vermelho se algum alerta crítico estiver desligado
-  const criticalOff = ALERT_DEFS.filter(d => d.critical && !alertPrefs[d.key]).length > 0;
-  btn.classList.toggle('alerts-warn', criticalOff);
-  btn.title = criticalOff ? '⚠ Alerta crítico desligado' : 'Configurar alertas';
+function toggleSound() {
+  soundOn = !soundOn;
+  const b = document.getElementById('sndBtn');
+  if (b) { b.textContent = soundOn ? 'Som On' : 'Som Off'; b.classList.toggle('snd-off', !soundOn); }
 }
 function hhmm() {
   return new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});

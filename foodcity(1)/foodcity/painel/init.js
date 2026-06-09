@@ -2,22 +2,22 @@
 
 // ── Init — DOMContentLoaded, BroadcastChannel, polling ──
 
-/* ══════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
- 
+
   // Relogio
   setInterval(() => { setText('clock', new Date().toLocaleTimeString('pt-BR')); }, 1000);
- 
-  // Teclas de atalho
+
+  // Teclas de atalho (6 = Histórico de Dias)
   document.addEventListener('keydown', e => {
     if (e.target.matches('input')) return;
-    const m = {'1':'nav-pedidos','2':'nav-clientes','3':'nav-historico','4':'nav-relatorios','5':'nav-estoque'};
+    const m = {
+      '1':'nav-pedidos','2':'nav-clientes','3':'nav-historico',
+      '4':'nav-relatorios','5':'nav-estoque','6':'nav-dias'  // ← NOVO
+    };
     if (m[e.key]) document.getElementById(m[e.key])?.click();
     if (e.key === 'n') simulateOrder();
   });
- 
+
   // Delegacao de eventos
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-act]');
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (act === 'print')   { printOrder(id); }
     else if (act === 'restock') { restock(name); }
   });
- 
-  // ── BroadcastChannel: comunicação instantânea entre abas ──
+
+  // ── BroadcastChannel ──
   let bcOk = false;
   try {
     if (typeof BroadcastChannel !== 'undefined') {
@@ -52,32 +52,25 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch(e) {
     dbSet('dbBC', 'Erro: ' + e.message);
   }
- 
-  // ── localStorage: disparo imediato quando outra aba grava ──
+
   window.addEventListener('storage', e => {
     if (e.key === 'fc_trigger' || e.key === 'fc_events') {
       processLocalStorage();
       dbSet('dbLS', 'Evento · ' + hhmm());
     }
   });
- 
-  // ── Polling a cada 1s para garantir 100% de captura ──
+
   setInterval(processLocalStorage, 1000);
- 
-  // ── Polling adicional mais frequente nos primeiros 10s ──
   let fastPoll = setInterval(processLocalStorage, 300);
   setTimeout(() => clearInterval(fastPoll), 10000);
- 
-  // Status inicial
+
   setText('connStatus', 'Ativo');
   dbSet('dbStatus', 'BroadcastChannel ' + (bcOk ? 'OK' : 'indisponivel') + ' + localStorage + polling 1s');
   setText('bridgeTxt', 'Aguardando pedidos de culinaria_v3.html…');
- 
-  // Render inicial + captura de eventos anteriores
+
   renderAll();
   renderStock();
-  dbSaveStock(); // salva estoque inicial se ainda não existir no DB
+  dbSaveStock();
   processLocalStorage();
-  // Restaura dados do IndexedDB (pedidos, clientes, receita, estoque)
   dbRestorePainel();
 });

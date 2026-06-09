@@ -1,6 +1,358 @@
 'use strict';
 
 // ── UI — badges, navegação, simulação, utilitários ──
+// Edição #3: printOrder() thermal-ready + modal Configurações da Loja
+
+/* ══════════════════════════════════════════════
+   CONFIGURAÇÕES DA LOJA
+   Persistidas via dbSaveSetting / dbGet (IndexedDB)
+══════════════════════════════════════════════ */
+
+// Valores padrão — substituídos ao carregar do DB em initStoreConfig()
+let storeConfig = {
+  name:       'FoodCity',
+  address:    '',
+  phone:      '',
+  footer:     'Obrigado pela preferência! Volte sempre. 🍔',
+  paperWidth: '80' // '58' | '80' | 'A4'
+};
+
+async function initStoreConfig() {
+  const saved = await dbGet('settings', 'storeConfig');
+  if (saved?.value) {
+    try { Object.assign(storeConfig, JSON.parse(saved.value)); } catch(e) {}
+  }
+}
+
+async function saveStoreConfig() {
+  await dbSaveSetting('storeConfig', JSON.stringify(storeConfig));
+}
+
+/* ══════════════════════════════════════════════
+   MODAL DE CONFIGURAÇÕES
+══════════════════════════════════════════════ */
+function openStoreConfig() {
+  // Remove instâncias anteriores
+  document.getElementById('fc-config-modal')?.remove();
+
+  const m = document.createElement('div');
+  m.id = 'fc-config-modal';
+  m.style.cssText = [
+    'position:fixed;inset:0;z-index:9000',
+    'display:flex;align-items:center;justify-content:center',
+    'background:rgba(0,0,0,.72)',
+    'animation:fadeIn .15s ease'
+  ].join(';');
+
+  const widths = [
+    { v: '58', l: '58 mm — Térmica estreita' },
+    { v: '80', l: '80 mm — Térmica padrão'  },
+    { v: 'A4', l: 'A4 — Impressora comum'   }
+  ];
+
+  m.innerHTML = `
+    <div style="
+      background:var(--card,#1a1008);
+      border:1px solid var(--border,#3a2a23);
+      border-radius:.6rem;
+      width:min(480px,94vw);
+      padding:1.5rem;
+      font-family:'Barlow',sans-serif;
+      color:var(--cream,#f5ede0);
+      box-shadow:0 8px 40px rgba(0,0,0,.7)
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase">
+          ⚙️ Configurações da Loja
+        </h3>
+        <button onclick="document.getElementById('fc-config-modal').remove()"
+          style="background:none;border:none;color:var(--muted,#a08060);font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.8rem">
+
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#a08060)">
+          Nome da Loja
+          <input id="cfg-name" type="text" value="${escHtml(storeConfig.name)}"
+            placeholder="Ex: FoodCity — Centro"
+            style="${cfgInputStyle()}"/>
+        </label>
+
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#a08060)">
+          Endereço
+          <input id="cfg-address" type="text" value="${escHtml(storeConfig.address)}"
+            placeholder="Ex: Av. das Américas, 100 — Recife, PE"
+            style="${cfgInputStyle()}"/>
+        </label>
+
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#a08060)">
+          Telefone / WhatsApp
+          <input id="cfg-phone" type="text" value="${escHtml(storeConfig.phone)}"
+            placeholder="Ex: (81) 99999-9999"
+            style="${cfgInputStyle()}"/>
+        </label>
+
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#a08060)">
+          Mensagem de Rodapé
+          <input id="cfg-footer" type="text" value="${escHtml(storeConfig.footer)}"
+            placeholder="Ex: Obrigado pela preferência!"
+            style="${cfgInputStyle()}"/>
+        </label>
+
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#a08060)">
+          Largura do Papel
+          <div style="display:flex;gap:.5rem;margin-top:.35rem;flex-wrap:wrap">
+            ${widths.map(w => `
+              <label style="
+                display:flex;align-items:center;gap:.35rem;
+                cursor:pointer;font-size:.72rem;text-transform:none;
+                background:var(--bg2,#0f0903);
+                border:1px solid ${storeConfig.paperWidth === w.v ? 'var(--yellow,#F5C000)' : 'var(--border,#3a2a23)'};
+                border-radius:.3rem;padding:.35rem .65rem;
+                color:${storeConfig.paperWidth === w.v ? 'var(--yellow,#F5C000)' : 'var(--cream,#f5ede0)'};
+                font-weight:${storeConfig.paperWidth === w.v ? '700' : '400'};
+                transition:all .15s;
+              " id="cfg-paper-lbl-${w.v}">
+                <input type="radio" name="cfg-paper" value="${w.v}"
+                  ${storeConfig.paperWidth === w.v ? 'checked' : ''}
+                  style="accent-color:var(--yellow,#F5C000)"
+                  onchange="updatePaperLabels()"/>
+                ${w.l}
+              </label>
+            `).join('')}
+          </div>
+        </label>
+
+      </div>
+
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.4rem">
+        <button onclick="document.getElementById('fc-config-modal').remove()"
+          style="
+            background:none;border:1px solid var(--border,#3a2a23);color:var(--muted,#a08060);
+            padding:.4rem .9rem;border-radius:.35rem;cursor:pointer;
+            font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;
+            text-transform:uppercase;letter-spacing:.06em
+          ">Cancelar</button>
+        <button onclick="applyStoreConfig()"
+          style="
+            background:var(--yellow,#F5C000);border:none;color:#1a1008;
+            padding:.4rem 1rem;border-radius:.35rem;cursor:pointer;
+            font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:800;
+            text-transform:uppercase;letter-spacing:.06em
+          ">Salvar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.getElementById('cfg-name')?.focus();
+}
+
+function cfgInputStyle() {
+  return [
+    'display:block;width:100%;margin-top:.35rem',
+    'background:var(--bg2,#0f0903)',
+    'border:1px solid var(--border,#3a2a23)',
+    'border-radius:.3rem',
+    'color:var(--cream,#f5ede0)',
+    'padding:.4rem .65rem',
+    'font-family:"Barlow",sans-serif',
+    'font-size:.78rem',
+    'outline:none'
+  ].join(';');
+}
+
+function updatePaperLabels() {
+  const sel = document.querySelector('input[name="cfg-paper"]:checked')?.value;
+  ['58', '80', 'A4'].forEach(v => {
+    const lbl = document.getElementById('cfg-paper-lbl-' + v);
+    if (!lbl) return;
+    const active = v === sel;
+    lbl.style.borderColor = active ? 'var(--yellow,#F5C000)' : 'var(--border,#3a2a23)';
+    lbl.style.color        = active ? 'var(--yellow,#F5C000)' : 'var(--cream,#f5ede0)';
+    lbl.style.fontWeight   = active ? '700' : '400';
+  });
+}
+
+async function applyStoreConfig() {
+  storeConfig.name       = document.getElementById('cfg-name')?.value.trim()    || storeConfig.name;
+  storeConfig.address    = document.getElementById('cfg-address')?.value.trim() || '';
+  storeConfig.phone      = document.getElementById('cfg-phone')?.value.trim()   || '';
+  storeConfig.footer     = document.getElementById('cfg-footer')?.value.trim()  || '';
+  storeConfig.paperWidth = document.querySelector('input[name="cfg-paper"]:checked')?.value || '80';
+  await saveStoreConfig();
+  document.getElementById('fc-config-modal')?.remove();
+  showToast('Configurações salvas!', 'order');
+}
+
+/* ══════════════════════════════════════════════
+   IMPRESSÃO — printOrder() thermal-ready
+══════════════════════════════════════════════ */
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtBrl(n) {
+  return 'R$ ' + (Number(n) || 0).toFixed(2).replace('.', ',');
+}
+
+function buildReceiptHTML(o) {
+  const t     = o.time instanceof Date ? o.time : new Date(o.time || Date.now());
+  const items = o.items || [];
+  const typeLabel = { delivery: 'Delivery', pickup: 'Retirada', market: 'Mercado' }[o.type] || o.type || '—';
+  const wClass = { '58': 'w58', '80': 'w80', 'A4': 'wA4' }[storeConfig.paperWidth] || 'w80';
+  const addr  = o.type !== 'pickup' ? (o.client?.addr || o.client?.address || '') : '';
+
+  const deliverySection = addr
+    ? `<div class="rc-delivery-addr">
+        <strong>Entregar em:</strong><br/>
+        ${escHtml(addr)}
+      </div>`
+    : '';
+
+  const newClientBadge = o.isNewClient
+    ? `<div class="rc-new-client-badge">★ Primeiro Pedido do Cliente ★</div>`
+    : '';
+
+  const itemRows = items.map(i =>
+    `<div class="rc-item-row">
+      <span class="item-qty">${i.qty}×</span>
+      <span class="item-name">${escHtml(i.name)}</span>
+      <span class="item-price">${fmtBrl(i.price)}</span>
+    </div>`
+  ).join('');
+
+  const subtotal = items.reduce((s, i) => s + (Number(i.price) || 0) * (i.qty || 1), 0);
+  const frete    = o.total > subtotal ? o.total - subtotal : 0;
+  const freteRow = frete > 0.01
+    ? `<div class="rc-total-row"><span>Taxa de entrega</span><span>${fmtBrl(frete)}</span></div>`
+    : '';
+
+  const storeName = storeConfig.name ? `<div class="rc-store-name">${escHtml(storeConfig.name)}</div>` : '';
+  const storeAddr = storeConfig.address
+    ? `<div class="rc-store-addr">${escHtml(storeConfig.address)}</div>` : '';
+  const storePhone = storeConfig.phone
+    ? `<div class="rc-store-phone">${escHtml(storeConfig.phone)}</div>` : '';
+  const footerMsg = storeConfig.footer
+    ? `<div class="rc-footer-msg">${escHtml(storeConfig.footer)}</div>` : '';
+
+  return `
+    <div class="fc-receipt ${wClass}">
+
+      <!-- Cabeçalho -->
+      <div class="rc-header">
+        <div class="rc-logo">Food<span>City</span></div>
+        ${storeName}
+        ${storeAddr}
+        ${storePhone}
+      </div>
+
+      <hr class="rc-sep-solid"/>
+
+      <!-- ID do pedido em destaque -->
+      <div class="rc-order-id">${escHtml(o.id)}</div>
+
+      <div class="rc-type-center">
+        <span class="rc-type-badge">${escHtml(typeLabel)}</span>
+      </div>
+
+      ${newClientBadge}
+
+      <hr class="rc-sep"/>
+
+      <!-- Metadados -->
+      <div class="rc-meta">
+        <div class="rc-meta-row">
+          <span class="label">Cliente</span>
+          <span class="value">${escHtml(o.client?.name || '—')}</span>
+        </div>
+        ${o.client?.phone ? `
+        <div class="rc-meta-row">
+          <span class="label">Telefone</span>
+          <span class="value">${escHtml(o.client.phone)}</span>
+        </div>` : ''}
+        <div class="rc-meta-row">
+          <span class="label">Horário</span>
+          <span class="value">${t.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+        </div>
+      </div>
+
+      ${deliverySection}
+
+      <hr class="rc-sep"/>
+
+      <!-- Itens -->
+      <div class="rc-items-title">Itens do Pedido</div>
+      ${itemRows}
+
+      <hr class="rc-sep"/>
+
+      <!-- Totais -->
+      ${freteRow}
+      <div class="rc-grand-total">
+        <span>TOTAL</span>
+        <span>${fmtBrl(o.total)}</span>
+      </div>
+
+      <!-- Pagamento -->
+      <div class="rc-pay-section">
+        <div class="rc-pay-method">
+          <span>Pagamento</span>
+          <span>${escHtml(o.pay || '—')}</span>
+        </div>
+      </div>
+
+      <hr class="rc-sep"/>
+
+      <!-- Rodapé -->
+      <div class="rc-footer">
+        ${footerMsg}
+        <div class="rc-footer-timestamp">${t.toLocaleString('pt-BR')}</div>
+      </div>
+
+      <div class="rc-cut-mark">- - - - - - - - - - - -</div>
+
+    </div>
+  `;
+}
+
+function printOrder(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+
+  // Remove janela anterior se existir
+  document.getElementById('fc-print-window')?.remove();
+
+  const wClass = { '58': 'w58', '80': 'w80', 'A4': 'wA4' }[storeConfig.paperWidth] || 'w80';
+  const pageW  = { w58: '58mm', w80: '80mm', wA4: '210mm' }[wClass] || '80mm';
+  const pageM  = { w58: '2mm', w80: '3mm', wA4: '10mm' }[wClass] || '3mm';
+
+  // Injeta @page dinâmico para o tamanho correto
+  let dynStyle = document.getElementById('fc-print-page-style');
+  if (!dynStyle) {
+    dynStyle = document.createElement('style');
+    dynStyle.id = 'fc-print-page-style';
+    document.head.appendChild(dynStyle);
+  }
+  dynStyle.textContent = `@page { size: ${pageW} auto; margin: ${pageM}; }`;
+
+  // Cria div de impressão (oculta na tela, visível no print via CSS)
+  const win = document.createElement('div');
+  win.id = 'fc-print-window';
+  win.style.cssText = 'display:none';
+  win.innerHTML = buildReceiptHTML(o);
+  document.body.appendChild(win);
+
+  // Aguarda render antes de acionar impressão
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.print();
+      // Remove após 3s para não sujar o DOM
+      setTimeout(() => win.remove(), 3000);
+    });
+  });
+}
 
 /* ══════════════════════════════════════════════
    BADGES & SIDEBAR
@@ -21,7 +373,7 @@ function updateSidebar() {
   setText('sbCliNew',  newCliCnt);
   setText('sbPending', orders.filter(o => o.status === 'new' || o.status === 'prep').length);
 }
- 
+
 /* ══════════════════════════════════════════════
    NAVEGACAO
 ══════════════════════════════════════════════ */
@@ -53,7 +405,7 @@ function toggleStore() {
   if (sd) sd.style.animation = storeOpen ? 'pulse 1.2s infinite' : 'none';
   showToast(storeOpen ? 'Loja aberta' : 'Loja fechada');
 }
- 
+
 /* ══════════════════════════════════════════════
    SIMULACAO
 ══════════════════════════════════════════════ */
@@ -65,7 +417,6 @@ function simulateOrder() {
   const items = DITEMS.slice(0, n).map(([nm, p]) => ({name: nm, qty: 1, price: p}));
   const total = items.reduce((s, i) => s + i.price, 0) + 5;
   const cid = 'sim_' + Date.now();
-  // registra o cliente simulado
   onNewClient({id: cid, name, email: name.toLowerCase().replace(' ', '.') + '@email.com',
     phone: '(82) 99' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000),
     address: 'Rua Demo, ' + Math.floor(Math.random()*999+1), registeredAt: new Date().toISOString()});
@@ -80,9 +431,9 @@ function simulateOrder() {
   });
   renderAll();
 }
- 
+
 /* ══════════════════════════════════════════════
-   UI
+   UI HELPERS
 ══════════════════════════════════════════════ */
 function showToast(msg, type = 'info') {
   const w = document.getElementById('toastWrap'); if (!w) return;

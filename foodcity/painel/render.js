@@ -125,44 +125,12 @@ function renderCliTable() {
  
 function renderHistory() {
   const tb = document.getElementById('histTable'); if (!tb) return;
+  const list = [...orders].reverse();
   const sl = { new: 'Aguardando', prep: 'Preparando', ready: 'Pronto', done: 'Entregue', cancelled: 'Cancelado' };
-
-  // ── Lê os valores dos filtros ──
-  const q        = (document.getElementById('histSearch')?.value  || '').toLowerCase().trim();
-  const fromVal  =  document.getElementById('histFrom')?.value   || '';
-  const toVal    =  document.getElementById('histTo')?.value     || '';
-  const stFilter =  document.getElementById('histStatus')?.value || 'all';
-
-  const fromMs = fromVal ? new Date(fromVal + 'T00:00:00').getTime() : null;
-  const toMs   = toVal   ? new Date(toVal   + 'T23:59:59').getTime() : null;
-
-  // ── Aplica filtros ──
-  let list = [...orders].reverse().filter(o => {
-    if (stFilter !== 'all' && o.status !== stFilter) return false;
-    const t = (o.time instanceof Date ? o.time : new Date(o.time)).getTime();
-    if (fromMs && t < fromMs) return false;
-    if (toMs   && t > toMs)   return false;
-    if (q) {
-      const id   = (o.id            || '').toLowerCase();
-      const name = (o.client?.name  || '').toLowerCase();
-      if (!id.includes(q) && !name.includes(q)) return false;
-    }
-    return true;
-  });
-
-  // ── Atualiza contador ──
-  const countEl = document.getElementById('histCount');
-  if (countEl) countEl.textContent = list.length + ' pedido(s)';
-
-  if (!orders.length) {
+  if (!list.length) {
     tb.innerHTML = '<tr><td colspan="8" class="no-data"><div class="ni">📋</div>Nenhum pedido ainda.</td></tr>';
     return;
   }
-  if (!list.length) {
-    tb.innerHTML = '<tr><td colspan="8" class="no-data"><div class="ni">🔍</div>Nenhum pedido corresponde aos filtros.<br/><small style="font-size:.7rem;color:var(--muted)">Tente ajustar a data, o status ou o termo de busca.</small></td></tr>';
-    return;
-  }
-
   tb.innerHTML = list.map(o =>
     '<tr>'
     + '<td class="mono" style="color:var(--yellow)">' + o.id + '</td>'
@@ -172,15 +140,9 @@ function renderHistory() {
     + '<td class="mono" style="color:var(--olive3)">R$ ' + (o.total || 0).toFixed(2).replace('.', ',') + '</td>'
     + '<td>' + (o.pay || '—') + '</td>'
     + '<td><span class="spill ' + (o.status || 'new') + '">' + (sl[o.status] || o.status) + '</span></td>'
-    + '<td class="mono" style="font-size:.65rem">' + (o.time instanceof Date ? o.time : new Date(o.time)).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + '</td>'
+    + '<td class="mono" style="font-size:.65rem">' + (o.time instanceof Date ? o.time : new Date(o.time)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '</td>'
     + '</tr>'
   ).join('');
-}
-
-function clearHistFilters() {
-  ['histFrom','histTo','histSearch'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  const sel = document.getElementById('histStatus'); if (sel) sel.value = 'all';
-  renderHistory();
 }
  
 function renderReports() {

@@ -21,7 +21,7 @@ function updateSidebar() {
   setText('sbCliNew',  newCliCnt);
   setText('sbPending', orders.filter(o => o.status === 'new' || o.status === 'prep').length);
 }
- 
+
 /* ══════════════════════════════════════════════
    NAVEGACAO
 ══════════════════════════════════════════════ */
@@ -36,6 +36,7 @@ function showPage(id, el, color) {
   if (id === 'historico')  renderHistory();
   if (id === 'relatorios') renderReports();
   if (id === 'estoque')    renderStock();
+  if (id === 'dias')       renderDayHistory();   // ← NOVO
   updateBadges(); updateSidebar();
 }
 function filterOrders(type, el) {
@@ -53,7 +54,7 @@ function toggleStore() {
   if (sd) sd.style.animation = storeOpen ? 'pulse 1.2s infinite' : 'none';
   showToast(storeOpen ? 'Loja aberta' : 'Loja fechada');
 }
- 
+
 /* ══════════════════════════════════════════════
    SIMULACAO
 ══════════════════════════════════════════════ */
@@ -65,7 +66,6 @@ function simulateOrder() {
   const items = DITEMS.slice(0, n).map(([nm, p]) => ({name: nm, qty: 1, price: p}));
   const total = items.reduce((s, i) => s + i.price, 0) + 5;
   const cid = 'sim_' + Date.now();
-  // registra o cliente simulado
   onNewClient({id: cid, name, email: name.toLowerCase().replace(' ', '.') + '@email.com',
     phone: '(82) 99' + Math.floor(Math.random()*9000+1000) + '-' + Math.floor(Math.random()*9000+1000),
     address: 'Rua Demo, ' + Math.floor(Math.random()*999+1), registeredAt: new Date().toISOString()});
@@ -80,7 +80,7 @@ function simulateOrder() {
   });
   renderAll();
 }
- 
+
 /* ══════════════════════════════════════════════
    UI
 ══════════════════════════════════════════════ */

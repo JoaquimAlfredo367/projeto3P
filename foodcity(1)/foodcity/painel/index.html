@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
- 
+
 <!-- ══ TOPBAR ══ -->
 <div class="topbar">
   <div class="logo">Food<span>City</span><span class="logo-sub">Painel</span></div>
@@ -25,12 +25,18 @@
   </div>
   <div class="topbar-r">
     <button class="tbtn" id="sndBtn" onclick="toggleSound()">Som On</button>
+    <!-- ▼ NOVO: botão Fechar Dia ▼ -->
+    <button class="tbtn" id="btnFecharDiaTop" onclick="fecharDia()"
+      title="Arquiva o resumo do dia e zera o painel para o próximo turno">
+      ☀ Fechar Dia
+    </button>
+    <!-- ▲ fim ▲ -->
     <button class="tbtn cyan" onclick="simulateOrder()">+ Simular</button>
     <a class="site-link" href="culinaria_v3.html" target="_blank">Site do Cliente →</a>
   </div>
 </div>
- 
-<!-- DEBUG BAR: mostra atividade em tempo real -->
+
+<!-- DEBUG BAR -->
 <div class="debug-bar">
   <strong>Bridge:</strong>
   <span id="dbStatus">Inicializando…</span>
@@ -38,12 +44,13 @@
   &nbsp;|&nbsp; <strong>Último:</strong> <span id="dbLast">—</span>
   &nbsp;|&nbsp; <strong>BC:</strong> <span id="dbBC">—</span>
   &nbsp;|&nbsp; <strong>LS:</strong> <span id="dbLS">—</span>
-  <button onclick="clearAll()" style="margin-left:auto;background:rgba(224,48,64,.1);border:1px solid rgba(224,48,64,.3);color:var(--redbright);padding:.12rem .45rem;border-radius:.2rem;cursor:pointer;font-size:.6rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Limpar Tudo</button>
+  <!-- renomeado: deixa claro que o histórico de dias é preservado -->
+  <button onclick="clearAll()" style="margin-left:auto;background:rgba(224,48,64,.1);border:1px solid rgba(224,48,64,.3);color:var(--redbright);padding:.12rem .45rem;border-radius:.2rem;cursor:pointer;font-size:.6rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Limpar Turno</button>
 </div>
- 
+
 <!-- ══ BODY ══ -->
 <div class="body-wrap">
- 
+
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sb-section">
@@ -64,13 +71,17 @@
     <div class="sb-divider"></div>
     <div class="sb-section">
       <div class="sb-label">Analise</div>
-      <div class="sb-item" id="nav-relatorios" onclick="showPage('relatorios',this,'gn')">
-        Relatorios
-      </div>
+      <div class="sb-item" id="nav-relatorios" onclick="showPage('relatorios',this,'gn')">Relatorios</div>
       <div class="sb-item" id="nav-estoque" onclick="showPage('estoque',this,'pp')">
         Estoque
         <span class="sbadge" id="sbBadgeStock" style="background:var(--redbright);color:#fff;display:none">!</span>
       </div>
+      <!-- ▼ NOVO: aba Histórico de Dias ▼ -->
+      <div class="sb-item" id="nav-dias" onclick="showPage('dias',this,'rd')"
+           title="Histórico de Dias Fechados [Tecla 6]">
+        Hist. de Dias
+      </div>
+      <!-- ▲ fim ▲ -->
     </div>
     <div class="sb-divider"></div>
     <div class="sb-stat">
@@ -89,10 +100,10 @@
       <div class="sb-stat-sub">aguardando acao</div>
     </div>
   </aside>
- 
+
   <!-- MAIN -->
   <main class="main">
- 
+
     <!-- PAGE: PEDIDOS -->
     <div class="page active" id="page-pedidos">
       <div class="ph">
@@ -126,7 +137,7 @@
         <div class="col cdone"><div class="col-h"><div class="cdot"></div><div class="ctitle">Entregues Hoje</div><div class="cc" id="cntD">0</div></div><div class="col-b" id="colD"></div></div>
       </div>
     </div>
- 
+
     <!-- PAGE: CLIENTES -->
     <div class="page" id="page-clientes">
       <div class="ph">
@@ -154,7 +165,7 @@
         </table>
       </div>
     </div>
- 
+
     <!-- PAGE: HISTORICO -->
     <div class="page" id="page-historico">
       <div class="ph">
@@ -175,7 +186,7 @@
         </table>
       </div>
     </div>
- 
+
     <!-- PAGE: RELATORIOS -->
     <div class="page" id="page-relatorios">
       <div class="ph">
@@ -194,53 +205,19 @@
         <div class="kpi teal"><div class="ki">👥</div><div class="kl">Clientes</div><div class="kv teal" id="rClients">0</div></div>
         <div class="kpi purple" data-key="avgTicket"><div class="ki">💳</div><div class="kl">Ticket Medio</div><div class="kv purple" id="rTicket">R$ 0</div></div>
       </div>
-      <!-- EDIÇÃO #2 — blocos injetados via JS abaixo do kpi-row -->
       <div id="ed2-vsOntem"></div>
       <div id="ed2-chart7d"></div>
       <div id="ed2-avg30"></div>
-
       <div class="report-grid">
-        <div class="rcard">
-          <div class="rcard-title">Pedidos por Hora</div>
-          <div class="chart-hours" id="chartHours"></div>
-          <div style="display:flex;justify-content:space-between;font-size:.56rem;color:var(--muted);margin-top:.1rem;" id="chartHoursLbls"></div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Formas de Pagamento</div>
-          <div class="donut-wrap">
-            <svg width="88" height="88" viewBox="0 0 88 88" id="donutSvg">
-              <circle cx="44" cy="44" r="34" fill="none" stroke="#3a2a23" stroke-width="14"/>
-              <circle id="dPix"  cx="44" cy="44" r="34" fill="none" stroke="#bdd050" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/>
-              <circle id="dCard" cx="44" cy="44" r="34" fill="none" stroke="#F5C000" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/>
-              <circle id="dCash" cx="44" cy="44" r="34" fill="none" stroke="#e03040" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/>
-            </svg>
-            <div class="donut-legend">
-              <div class="dleg"><div class="dleg-dot" style="background:var(--olive3)"></div><span class="dleg-name">Pix</span><span class="dleg-val" id="legPix">0</span><span class="dleg-pct" id="legPixP">0%</span></div>
-              <div class="dleg"><div class="dleg-dot" style="background:var(--yellow)"></div><span class="dleg-name">Cartao</span><span class="dleg-val" id="legCard">0</span><span class="dleg-pct" id="legCardP">0%</span></div>
-              <div class="dleg"><div class="dleg-dot" style="background:var(--redbright)"></div><span class="dleg-name">Dinheiro</span><span class="dleg-val" id="legCash">0</span><span class="dleg-pct" id="legCashP">0%</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Tipo de Pedido</div>
-          <div class="bar-h" id="barTipo"></div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Itens Mais Pedidos</div>
-          <div class="bar-h" id="barItens"></div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Receita por Hora (R$)</div>
-          <div class="chart-hours" id="chartReceita"></div>
-          <div style="display:flex;justify-content:space-between;font-size:.56rem;color:var(--muted);margin-top:.1rem;" id="chartReceitaLbls"></div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Top Clientes</div>
-          <div class="bar-h" id="barClientes"></div>
-        </div>
+        <div class="rcard"><div class="rcard-title">Pedidos por Hora</div><div class="chart-hours" id="chartHours"></div><div style="display:flex;justify-content:space-between;font-size:.56rem;color:var(--muted);margin-top:.1rem;" id="chartHoursLbls"></div></div>
+        <div class="rcard"><div class="rcard-title">Formas de Pagamento</div><div class="donut-wrap"><svg width="88" height="88" viewBox="0 0 88 88" id="donutSvg"><circle cx="44" cy="44" r="34" fill="none" stroke="#3a2a23" stroke-width="14"/><circle id="dPix" cx="44" cy="44" r="34" fill="none" stroke="#bdd050" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/><circle id="dCard" cx="44" cy="44" r="34" fill="none" stroke="#F5C000" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/><circle id="dCash" cx="44" cy="44" r="34" fill="none" stroke="#e03040" stroke-width="14" stroke-dasharray="0 214" stroke-linecap="round" transform="rotate(-90 44 44)" style="transition:.5s"/></svg><div class="donut-legend"><div class="dleg"><div class="dleg-dot" style="background:var(--olive3)"></div><span class="dleg-name">Pix</span><span class="dleg-val" id="legPix">0</span><span class="dleg-pct" id="legPixP">0%</span></div><div class="dleg"><div class="dleg-dot" style="background:var(--yellow)"></div><span class="dleg-name">Cartao</span><span class="dleg-val" id="legCard">0</span><span class="dleg-pct" id="legCardP">0%</span></div><div class="dleg"><div class="dleg-dot" style="background:var(--redbright)"></div><span class="dleg-name">Dinheiro</span><span class="dleg-val" id="legCash">0</span><span class="dleg-pct" id="legCashP">0%</span></div></div></div></div>
+        <div class="rcard"><div class="rcard-title">Tipo de Pedido</div><div class="bar-h" id="barTipo"></div></div>
+        <div class="rcard"><div class="rcard-title">Itens Mais Pedidos</div><div class="bar-h" id="barItens"></div></div>
+        <div class="rcard"><div class="rcard-title">Receita por Hora (R$)</div><div class="chart-hours" id="chartReceita"></div><div style="display:flex;justify-content:space-between;font-size:.56rem;color:var(--muted);margin-top:.1rem;" id="chartReceitaLbls"></div></div>
+        <div class="rcard"><div class="rcard-title">Top Clientes</div><div class="bar-h" id="barClientes"></div></div>
       </div>
     </div>
- 
+
     <!-- PAGE: ESTOQUE -->
     <div class="page" id="page-estoque">
       <div class="ph">
@@ -254,13 +231,34 @@
       </div>
       <div class="stock-grid" id="stockGrid"></div>
     </div>
- 
+
+    <!-- ▼▼▼ PAGE: HISTÓRICO DE DIAS — NOVA ▼▼▼ -->
+    <div class="page" id="page-dias">
+      <div class="ph">
+        <div class="ph-left">
+          <h2>Histórico de Dias</h2>
+          <p>Resumo arquivado a cada fechamento de turno — não é apagado pelo "Limpar Turno"</p>
+        </div>
+        <div class="ph-actions">
+          <button class="btn-sm danger"
+            onclick="clearEverything(); setTimeout(renderDayHistory, 300)"
+            title="Apaga histórico de dias E todos os dados do painel">
+            🗑 Apagar Tudo
+          </button>
+        </div>
+      </div>
+      <div id="dc-hist-container">
+        <div class="dc-empty-hist"><span>📅</span>Clique em "Hist. de Dias" para carregar</div>
+      </div>
+    </div>
+    <!-- ▲▲▲ fim page-dias ▲▲▲ -->
+
   </main>
 </div>
- 
+
 <div class="toast-wrap" id="toastWrap"></div>
 <div class="notif-area" id="notifArea"></div>
- 
+
 <script src="db.js"></script>
 <script src="state.js"></script>
 <script src="bridge.js"></script>

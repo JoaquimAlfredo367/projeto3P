@@ -1,6 +1,6 @@
 'use strict';
 
-// ── Bridge — handlers de eventos e receiver BroadcastChannel/localStorage ──
+
 
 /* ══════════════════════════════════════════════
    HANDLERS DE EVENTOS

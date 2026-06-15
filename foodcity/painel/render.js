@@ -104,7 +104,7 @@ function renderCliTable() {
     tb.innerHTML = '<tr><td colspan="9" class="no-data"><div class="ni">👥</div>'
       + 'Nenhum cliente ainda.<br/>'
       + '<small style="font-size:.7rem">Quando alguem se cadastrar no '
-      + '<a href="culinaria_v3.html" target="_blank" style="color:var(--yellow)">site do cliente</a>'
+      + '<a href="../cliente/index.html" target="_blank" style="color:var(--yellow)">site do cliente</a>'
       + ', aparecera aqui.</small></td></tr>';
     return;
   }

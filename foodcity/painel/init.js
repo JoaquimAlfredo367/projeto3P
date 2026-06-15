@@ -61,10 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
  
-  // ── Polling a cada 1s para garantir 100% de captura ──
+
   setInterval(processLocalStorage, 1000);
  
-  // ── Polling adicional mais frequente nos primeiros 10s ──
+
   let fastPoll = setInterval(processLocalStorage, 300);
   setTimeout(() => clearInterval(fastPoll), 10000);
  
@@ -77,6 +77,11 @@ document.addEventListener('DOMContentLoaded', function() {
   renderAll();
   renderStock();
   dbSaveStock(); // salva estoque inicial se ainda não existir no DB
+
+  // ── Limpeza de eventos expirados (>24h) antes de processar ──
+ 
+  purgeOldEvents();
+
   processLocalStorage();
   // Restaura dados do IndexedDB (pedidos, clientes, receita, estoque)
   dbRestorePainel();

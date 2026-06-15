@@ -2,9 +2,7 @@
 
 // ── Render — renderAll, KPIs, Kanban, Clientes, Histórico ──
 
-/* ══════════════════════════════════════════════
-   RENDER
-══════════════════════════════════════════════ */
+// Render
 function renderAll() {
   renderKPIs(); renderBoards(); renderCliTable(); renderHistory();
   updateBadges(); updateSidebar(); checkStockAlerts();
@@ -75,12 +73,26 @@ function cardHTML(o) {
   else
     acts = '<button class="ob prt" data-act="print" data-id="' + o.id + '">Imprimir</button>';
  
+  // ── countdown de preparo ──
+  let countdownHTML = '';
+  if (o.status === 'prep' && o.prepEnd) {
+    const diff = Math.max(0, Math.round((o.prepEnd - Date.now()) / 1000));
+    const m = Math.floor(diff / 60), s = diff % 60;
+    const urgentCls = diff <= 120 && diff > 0 ? ' countdown-urgent' : diff === 0 ? ' countdown-done' : '';
+    countdownHTML = '<div class="prep-countdown-row">'
+      + '<span class="prep-countdown-label">⏱ Preparo</span>'
+      + '<span class="prep-countdown' + urgentCls + '" data-countdown-end="' + o.prepEnd + '">' + m + ':' + String(s).padStart(2, '0') + '</span>'
+      + '<span class="prep-countdown-total">/ ' + (o.prepMins || '?') + ' min</span>'
+      + '</div>';
+  }
+
   return (
     '<div class="oc ' + sc + (o.isNewClient ? ' nc' : '') + '">'
     + '<div class="ot"><span class="oid">' + o.id + '</span>'
     + '<span class="otype ' + (o.type || 'delivery') + '">' + tl + '</span>'
     + (o.isNewClient ? '<span class="ncb">1o pedido</span>' : '')
     + '<span class="otime">' + t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '</span></div>'
+    + countdownHTML
     + '<div class="oclient">' + (o.client?.name || 'Cliente') + '</div>'
     + '<div class="oaddr">' + (o.type !== 'pickup' ? (o.client?.addr || o.client?.address || 'Endereco nao informado') : 'Retirada no balcao') + '</div>'
     + '<div class="oitems">'
@@ -104,7 +116,7 @@ function renderCliTable() {
     tb.innerHTML = '<tr><td colspan="9" class="no-data"><div class="ni">👥</div>'
       + 'Nenhum cliente ainda.<br/>'
       + '<small style="font-size:.7rem">Quando alguem se cadastrar no '
-      + '<a href="../cliente/index.html" target="_blank" style="color:var(--yellow)">site do cliente</a>'
+      + '<a href="culinaria_v3.html" target="_blank" style="color:var(--yellow)">site do cliente</a>'
       + ', aparecera aqui.</small></td></tr>';
     return;
   }

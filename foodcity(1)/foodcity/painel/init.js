@@ -79,8 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
   dbSaveStock(); // salva estoque inicial se ainda não existir no DB
 
   // ── Limpeza de eventos expirados (>24h) antes de processar ──
-  // Roda uma única vez no boot; não interfere com eventos recentes
-  // nem com dados já persistidos no IndexedDB.
+
   purgeOldEvents();
 
   processLocalStorage();

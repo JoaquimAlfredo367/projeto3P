@@ -24,13 +24,12 @@ function onNewClient(d) {
   if (first) {
     newCliCnt++;
     dbSaveSetting('newCliCnt', newCliCnt);
-    if (alertPrefs.visClient)
-      showNotif('👤', 'Novo Cliente: ' + d.name,
-        (d.email ? d.email : '') + (d.phone ? ' · ' + d.phone : '') + (d.address ? '\n' + d.address : ''), 'nc');
+    showNotif('👤', 'Novo Cliente: ' + d.name,
+      (d.email ? d.email : '') + (d.phone ? ' · ' + d.phone : '') + (d.address ? '\n' + d.address : ''), 'nc');
     showToast('Novo cliente: ' + d.name, 'client');
     setText('bridgeTxt', 'Ultimo: ' + d.name + ' — ' + hhmm());
     debugLog('NEW_CLIENT: ' + d.name);
-    if (alertPrefs.sndClient) playChime();
+    if (soundOn) playChime();
   }
 }
  
@@ -66,15 +65,14 @@ function onNewOrder(d) {
     clients[d.client.id].isNew = false;
     dbSaveClient(clients[d.client.id]);
   }
-  if (alertPrefs.visOrder)
-    showNotif('📦', 'Pedido ' + d.id + (isNC ? ' — 1o pedido!' : ''),
-      (d.client?.name || '') + ' · R$ ' + (d.total || 0).toFixed(2) + ' · ' +
-      (d.type === 'market' ? 'Mercado' : d.type === 'delivery' ? 'Delivery' : 'Retirada'), 'no');
+  showNotif('📦', 'Pedido ' + d.id + (isNC ? ' — 1o pedido!' : ''),
+    (d.client?.name || '') + ' · R$ ' + (d.total || 0).toFixed(2) + ' · ' +
+    (d.type === 'market' ? 'Mercado' : d.type === 'delivery' ? 'Delivery' : 'Retirada'), 'no');
   showToast('Pedido ' + d.id + ' recebido!', 'order');
   setText('ordSub',   'Ultimo: ' + d.id + ' de ' + d.client?.name + ' — ' + hhmm());
   setText('bridgeTxt','Ultimo: ' + d.id + ' de ' + d.client?.name + ' — ' + hhmm());
   debugLog('NEW_ORDER: ' + d.id + ' R$ ' + (d.total || 0).toFixed(2));
-  if (alertPrefs.sndOrder) playBeep();
+  if (soundOn) playBeep();
 }
  
 function onOrderStatus(d) {

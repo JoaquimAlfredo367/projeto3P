@@ -4,7 +4,7 @@ Sistema web desenvolvido para conectar clientes e restaurantes em um ambiente in
 
 ---
 
-## 📋 Sobre o Projeto
+##  Sobre o Projeto
 
 O **FoodCity** é uma aplicação web que simula uma plataforma de delivery e gerenciamento de restaurantes.
 
@@ -16,9 +16,7 @@ O sistema foi desenvolvido para a disciplina de **Projeto de Programação**, ap
 
 Acesse a versão hospedada do projeto:
 
- **FoodCity Cliente:** [Clique aqui](LINK_DO_NETLIFY_CLIENTE)
-
- **FoodCity Painel Administrativo:** [Clique aqui](LINK_DO_NETLIFY_PAINEL)
+ **FoodCity Cliente/ Painel:** [Clique aqui](https://projetofoodcity.netlify.app/foodcity/cliente/index.html)
 
 ---
 

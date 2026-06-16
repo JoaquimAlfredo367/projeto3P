@@ -22,13 +22,6 @@ Acesse a versão hospedada do projeto:
 
 ---
 
-##  Como Executar Localmente
-
-### 1. Clone o repositório
-
-```bash
-git clone LINK_DO_REPOSITORIO
-
 ##  Funcionalidades
 
 ###  Área do Cliente

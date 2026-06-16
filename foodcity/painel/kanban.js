@@ -12,6 +12,7 @@ function acceptOrder(id) {
 
 /* ── Modal de tempo de preparo ── */
 function showPrepTimeModal(id) {
+  // Remove modal anterior se existir
   const old = document.getElementById('prepModal'); if (old) old.remove();
 
   const modal = document.createElement('div');
@@ -42,6 +43,10 @@ function showPrepTimeModal(id) {
   `;
   document.body.appendChild(modal);
 
+  // Focar input ao abrir
+  setTimeout(() => document.getElementById('prepCustom')?.focus(), 50);
+
+  // Enter confirma
   setTimeout(() => document.getElementById('prepCustom')?.focus(), 50);
 
   modal.querySelector('#prepCustom').addEventListener('keydown', e => {
@@ -52,6 +57,7 @@ function showPrepTimeModal(id) {
 function selectPrepTime(mins) {
   const inp = document.getElementById('prepCustom');
   if (inp) { inp.value = mins; }
+  // Destaca o preset selecionado
   document.querySelectorAll('.prep-preset').forEach(b => {
     b.classList.toggle('selected', parseInt(b.textContent) === mins);
   });
@@ -69,6 +75,10 @@ function confirmPrepTime(id) {
   dbSaveOrder(o);
   renderAll();
   showToast('Pedido ' + id + ' aceito! Preparo: ' + mins + ' min', 'order');
+}
+
+function closePrepModal() {
+  const m = document.getElementById('prepModal'); if (m) m.remove();
 }
 
 function closePrepModal() {
@@ -387,12 +397,14 @@ function _executeClearAll() {
 function printOrder(id) {
   const o = orders.find(x => x.id === id); if (!o) return;
 
+  // Remove janela anterior se existir
   document.getElementById('fc-print-window')?.remove();
 
   const wClass = { '58': 'w58', '80': 'w80', 'A4': 'wA4' }[storeConfig.paperWidth] || 'w80';
   const pageW  = { w58: '58mm', w80: '80mm', wA4: '210mm' }[wClass] || '80mm';
   const pageM  = { w58: '2mm',  w80: '3mm',  wA4: '10mm'  }[wClass] || '3mm';
 
+  // Injeta @page dinâmico para o tamanho correto (sem diálogo manual)
   let dynStyle = document.getElementById('fc-print-page-style');
   if (!dynStyle) {
     dynStyle = document.createElement('style');
@@ -401,16 +413,19 @@ function printOrder(id) {
   }
   dynStyle.textContent = '@page { size: ' + pageW + ' auto; margin: ' + pageM + '; }';
 
+  // Cria div de impressão — oculto na tela, visível no print via print.css
   const win = document.createElement('div');
   win.id = 'fc-print-window';
   win.style.cssText = 'display:none';
   win.innerHTML = buildReceiptHTML(o);
   document.body.appendChild(win);
 
+  // Aguarda render antes de acionar impressão
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       window.print();
       setTimeout(() => win.remove(), 3000);
     });
   });
+}
 }

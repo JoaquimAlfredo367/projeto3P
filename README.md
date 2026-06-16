@@ -121,7 +121,3 @@ O painel administrativo oferece:
 - Sidney Barros
 
 ---
-
-## 🎓 Projeto Acadêmico
-
-Projeto desenvolvido para a disciplina de **Projeto de Programação**, com foco em desenvolvimento web, organização em equipe e utilização de Git/GitHub para versionamento.

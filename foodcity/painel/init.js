@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
   renderStock();
   dbSaveStock(); // salva estoque inicial se ainda não existir no DB
   processLocalStorage();
+  purgeOldEvents();
   // Restaura dados do IndexedDB (pedidos, clientes, receita, estoque)
   dbRestorePainel();
 });

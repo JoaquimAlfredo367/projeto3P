@@ -133,3 +133,25 @@ function processLocalStorage() {
     renderAll();
   }
 }
+/* ══════════════════════════════════════════════
+   LIMPEZA AUTOMÁTICA — eventos > 24h
+   Chamada no boot (init.js) e a cada execução
+   de processLocalStorage para manter o
+   localStorage enxuto.
+══════════════════════════════════════════════ */
+function purgeOldEvents() {
+  try {
+    const raw = localStorage.getItem('fc_events');
+    if (!raw) return;
+    const evs = JSON.parse(raw);
+    if (!Array.isArray(evs)) return;
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 h atrás
+    const fresh = evs.filter(ev => ev && ev.ts && ev.ts >= cutoff);
+    if (fresh.length !== evs.length) {
+      localStorage.setItem('fc_events', JSON.stringify(fresh));
+      debugLog('purgeOldEvents: removidos ' + (evs.length - fresh.length) + ' evento(s) antigos');
+    }
+  } catch(e) {
+    debugLog('purgeOldEvents erro: ' + e.message);
+  }
+}
